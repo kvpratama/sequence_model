@@ -87,15 +87,15 @@ if __name__ == '__main__':
     cuda = True if torch.cuda.is_available() else False
     Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
-    name_dataset = NameDataset()
+    name_dataset = NameDataset(test=True)
     # dataloader = DataLoader(name_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
     n_hidden = 128
     rnn = RNN(name_dataset.n_letters, n_hidden, name_dataset.n_categories, batch_size).to(device)
-    saved_state = torch.load('epoch_0.pth')
+    saved_state = torch.load('epoch_49.pth')
     rnn.load_state_dict(saved_state)
 
     plot_confusion(rnn, name_dataset, device, Tensor)
 
-    predict('Jackson', rnn, name_dataset.n_letters, name_dataset.all_letters, name_dataset.all_categories, device)
-    pdb.set_trace()
+    # predict('Jackson', rnn, name_dataset.n_letters, name_dataset.all_letters, name_dataset.all_categories, device)
+    # pdb.set_trace()

@@ -10,20 +10,23 @@ import string
 
 import pandas as pd
 
+from utils import letter_to_index, line_to_one_hot_vector
+
 import pdb
 
 
 class NameDataset(Dataset):
-    def __init__(self):
+    def __init__(self, test=False):
         self.all_letters = string.ascii_letters + " .,;-'"
         self.n_letters = len(self.all_letters)
         self.all_categories = []
         self.category_lines = {}
         self.category_count = {}
         self.name_count = 0
+        self.test = test
 
         # Build the category_lines dictionary, a list of names per language
-        for filename in self.find_files('names/*.txt'):
+        for filename in self.find_files('./names/*.txt'):
             category = os.path.splitext(os.path.basename(filename))[0]
             self.all_categories.append(category)
             lines = self.read_lines(filename)
@@ -44,9 +47,16 @@ class NameDataset(Dataset):
         return self.name_count
 
     def __getitem__(self, idx):
-        # name, category = self.name_df.iloc[idx]
-        name, category = self.name_df.iloc[idx][['name_eq_len', 'category']]
-        name_int = self.line_to_one_hot_vector(name[:10])
+        if self.test:
+            name, category = self.name_df.iloc[idx][['name', 'category']]
+        else:
+            category = self.all_categories[np.random.randint(len(self.all_categories))]
+            # print(category)
+            category_df = self.name_df['name'][self.name_df.category == category]
+            rand_idx = np.random.randint(category_df.shape[0])
+            name = category_df.iloc[rand_idx]
+
+        name_int = line_to_one_hot_vector(name, self.n_letters, self.all_letters)
         category_int = self.all_categories.index(category)
         return name_int, category_int
 
@@ -71,15 +81,3 @@ class NameDataset(Dataset):
     def read_lines(self, filename):
         lines = open(filename, encoding='utf-8').read().strip().split('\n')
         return [self.unicode_to_ascii(line) for line in lines]
-
-    # Find letter index from all_letters, e.g. "a" = 0
-    def letter_to_index(self, letter):
-        return self.all_letters.find(letter)
-
-    # Turn a line into a <line_length x 1 x n_letters>,
-    # or an array of one-hot letter vectors
-    def line_to_one_hot_vector(self, line):
-        tensor = np.zeros((len(line), self.n_letters))
-        for li, letter in enumerate(line):
-            tensor[li][self.letter_to_index(letter)] = 1
-        return tensor
