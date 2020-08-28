@@ -77,23 +77,25 @@ if __name__ == '__main__':
     stock_symbols = 'TSLA'
     tsla_df = pd.read_csv(stock_symbols + '.csv', index_col='Date', parse_dates=['Date'])
     # tsla_df = tsla_df.drop('Adj Close', axis=1)
-    tsla_df = tsla_df[['Open', 'High', 'Low', 'Volume', 'Close']]
     print(tsla_df.info())
     print(tsla_df.describe())
+
+    # pdb.set_trace()
+    tsla_df['Moving_av'] = tsla_df['Close'].rolling(window=50, min_periods=0).mean()
 
     # tsla_df.loc[:, tsla_df.columns != 'Volume'].plot.box()
     # tsla_df.loc[:'2019'].plot()
     # tsla_df.loc[:'2019', tsla_df.columns != 'Volume'].plot()
     # plt.show()
-
+    tsla_df = tsla_df[['Open', 'High', 'Low', 'Volume', 'Moving_av', 'Close']]
     train_df = tsla_df.loc[:'2019']
     test_df = tsla_df.loc['2020':]
 
     seq_len = 100
     batch_size = 128
     n_epoch = 50
-    n_feature = 5
-    out_feature = 5
+    n_feature = len(tsla_df.columns)
+    out_feature = len(tsla_df.columns)
 
     train_x, train_y, val_x, val_y = load_data(train_df, seq_len, out_feature=out_feature)
 
@@ -172,8 +174,10 @@ if __name__ == '__main__':
         test_predict.append(output[:, -1])
 
     plt.subplot(1, 2, 1)
-    plt.plot(test_y[:, -1].cpu().numpy(), label='GT')
+    plt.plot(test_y[:, -1].cpu().numpy(), label='Close')
+    plt.plot(test_y[:, -2].cpu().numpy(), label='Moving_av')
     plt.plot(test_predict, label='Single')
+    plt.legend()
 
     if n_feature == out_feature:
         test_cont_predict = []
