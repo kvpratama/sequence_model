@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import torchaudio
 import pandas as pd
+import pdb
 
 
 class UrbanSoundDataset(Dataset):
@@ -34,19 +35,22 @@ class UrbanSoundDataset(Dataset):
         # pdb.set_trace()
         # load returns a tensor with the sound data and the sampling frequency (44.1kHz for UrbanSound8K)
         soundData = torch.mean(sound, dim=0, keepdim=True)
-        # soundData = torch.mean(sound[0], dim=0).unsqueeze(1)
-        # downsample the audio to ~8kHz
-        # tempData = torch.zeros([160000, 1])  # tempData accounts for audio clips that are too short
-        tempData = torch.zeros([1, 160000])  # tempData accounts for audio clips that are too short
+        # tempData = torch.zeros([1, 160000])  # tempData accounts for audio clips that are too short
 
-        if soundData.numel() < 160000:
-            # tempData[:soundData.numel()] = soundData[:]
-            tempData[:, :soundData.numel()] = soundData
-        else:
-            # tempData[:] = soundData[:160000]
-            tempData = soundData[:, :160000]
+        # repeat short sound
+        while len(soundData[0]) < 160000:
+            soundData = torch.cat([soundData, soundData], axis=1)
 
-        soundData = tempData
+        soundData = soundData[:, :160000]
+
+        # if soundData.numel() < 160000:
+        # tempData[:soundData.numel()] = soundData[:]
+        # tempData[:, :soundData.numel()] = soundData
+        # else:
+        # tempData[:] = soundData[:160000]
+        # tempData = soundData[:, :160000]
+
+        # soundData = tempData
 
         # soundFormatted = torch.zeros([160, 1])
         # soundFormatted[:160] = soundData[::1000]  # take every fifth sample of soundData
@@ -58,7 +62,7 @@ class UrbanSoundDataset(Dataset):
         mfcc = torchaudio.transforms.MFCC(sample_rate=sample_rate)(soundData)  # (channel, n_mfcc, time)
         mfcc_norm = (mfcc - mfcc.mean()) / mfcc.std()
         # spectogram = torchaudio.transforms.Spectrogram(sample_rate=sample_rate)(soundData)
-        feature = torch.cat([mel_specgram, mfcc], axis=1)
+        feature = torch.cat([mel_specgram_norm, mfcc_norm], axis=1)
         # norm = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         # feature_norm = norm(feature)
         # pdb.set_trace()
