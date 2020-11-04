@@ -57,10 +57,18 @@ class UrbanSoundDataset(Dataset):
         # torchaudio.save('save3.wav', soundData.permute(1,0)[:,:160000][::5], sound[1])
         # soundFormatted = soundFormatted.permute(1, 0)
 
+        eps = 1e-10
+
         mel_specgram = torchaudio.transforms.MelSpectrogram(sample_rate=sample_rate)(soundData)  # (channel, n_mels, time)
-        mel_specgram_norm = (mel_specgram - mel_specgram.mean()) / mel_specgram.std()
+        mel_specgram_mean = mel_specgram.mean(axis=2)[:, :, None]
+        mel_specgram_std = mel_specgram.std(axis=2)[:, :, None]
+        mel_specgram_norm = (mel_specgram - mel_specgram_mean) / (mel_specgram_std + eps)
+
         mfcc = torchaudio.transforms.MFCC(sample_rate=sample_rate)(soundData)  # (channel, n_mfcc, time)
-        mfcc_norm = (mfcc - mfcc.mean()) / mfcc.std()
+        mfcc_mean = mfcc.mean(axis=2)[:, :, None]
+        mfcc_std = mfcc.std(axis=2)[:, :, None]
+        mfcc_norm = (mfcc - mfcc_mean) / (mfcc_std + eps)
+
         # spectogram = torchaudio.transforms.Spectrogram(sample_rate=sample_rate)(soundData)
         feature = torch.cat([mel_specgram_norm, mfcc_norm], axis=1)
         # norm = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
