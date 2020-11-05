@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import torchaudio
 import pandas as pd
+import matplotlib.pyplot as plt
 import pdb
 
 
@@ -44,18 +45,13 @@ class UrbanSoundDataset(Dataset):
         soundData = soundData[:, :160000]
 
         # if soundData.numel() < 160000:
-        # tempData[:soundData.numel()] = soundData[:]
-        # tempData[:, :soundData.numel()] = soundData
+        #     # tempData[:soundData.numel()] = soundData[:]
+        #     tempData[:, :soundData.numel()] = soundData
         # else:
-        # tempData[:] = soundData[:160000]
-        # tempData = soundData[:, :160000]
-
+        #     # tempData[:] = soundData[:160000]
+        #     tempData = soundData[:, :160000]
+        #
         # soundData = tempData
-
-        # soundFormatted = torch.zeros([160, 1])
-        # soundFormatted[:160] = soundData[::1000]  # take every fifth sample of soundData
-        # torchaudio.save('save3.wav', soundData.permute(1,0)[:,:160000][::5], sound[1])
-        # soundFormatted = soundFormatted.permute(1, 0)
 
         eps = 1e-10
 
@@ -68,6 +64,13 @@ class UrbanSoundDataset(Dataset):
         mfcc_mean = mfcc.mean(axis=2)[:, :, None]
         mfcc_std = mfcc.std(axis=2)[:, :, None]
         mfcc_norm = (mfcc - mfcc_mean) / (mfcc_std + eps)
+
+        # plt.subplot(1, 2, 1)
+        # plt.plot(mfcc[0].permute(1, 0))
+        # plt.subplot(1, 2, 2)
+        # plt.plot(mfcc_norm[0].permute(1, 0))
+        # plt.show()
+        # pdb.set_trace()
 
         # spectogram = torchaudio.transforms.Spectrogram(sample_rate=sample_rate)(soundData)
         feature = torch.cat([mel_specgram_norm, mfcc_norm], axis=1)
