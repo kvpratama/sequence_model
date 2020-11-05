@@ -82,8 +82,8 @@ def test(model, epoch):
 if __name__ == '__main__':
 
     # Create an experiment
-    experiment = Experiment(project_name="UrbanSound8K", workspace="kdebugging")
-    experiment.set_name("test .comet.config")
+    experiment = Experiment(project_name="UrbanSound8K", workspace="kdebugging", disabled=False)
+    experiment.set_name("repeat norm batch128")
     hyperparameters = {"lr": 0.01, "weight_decay": 0.0001, "batch_size": 128, "in_feature": 168, "out_feature": 10}
     experiment.log_parameters(hyperparameters)
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     kwargs = {'num_workers': 1, 'pin_memory': True} if device == 'cuda' else {}  # needed for using datasets on gpu
 
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=hyperparameters["batch_size"], shuffle=True, drop_last=True, **kwargs)
-    test_loader = torch.utils.data.DataLoader(test_set, batch_size=hyperparameters["batch_size"], shuffle=True, drop_last=True, **kwargs)
+    test_loader = torch.utils.data.DataLoader(test_set, batch_size=hyperparameters["batch_size"], drop_last=True, **kwargs)
 
     # model = Net()
     model = AudioLSTM(n_feature=hyperparameters["in_feature"], out_feature=hyperparameters["out_feature"])
